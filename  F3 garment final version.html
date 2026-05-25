@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>F3 — Garment Management System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#08090a;--s1:#0f1114;--s2:#16191e;
+  --border:#2a2f38;--border2:#363d48;
+  --gold:#c9a84c;--gold2:#e8c96a;--gold3:#f5e0a0;
+  --text:#e8eaf0;--muted:#6b7280;--muted2:#9ca3af;
+  --green:#22c55e;--red:#ef4444;--blue:#3b82f6;
+  --r:10px;--r2:14px;
+}
+body{background:var(--bg);color:var(--text);font-size:14px;font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh}
+.screen{display:none;min-height:100vh}
+.screen.show{display:flex}
+
+/* LOGIN */
+#scr-login{align-items:center;justify-content:center}
+.auth-wrap{width:420px;padding:20px}
+.f3-wordmark{font-size:68px;font-weight:900;letter-spacing:8px;color:var(--gold);line-height:1;text-align:center}
+.f3-tagline{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;margin-top:8px;text-align:center;margin-bottom:40px}
+.auth-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:36px 32px;text-align:center}
+.auth-icon{font-size:44px;margin-bottom:14px}
+.auth-title{font-size:19px;font-weight:700;color:var(--gold);margin-bottom:8px}
+.auth-sub{font-size:13px;color:var(--muted);margin-bottom:26px;line-height:1.7}
+.btn-gold{width:100%;padding:12px;background:linear-gradient(135deg,var(--gold),var(--gold2));color:#08090a;font-weight:800;font-size:14px;border:none;border-radius:var(--r);cursor:pointer;margin-top:4px}
+.btn-gold:hover{opacity:.92}
+.err-msg{color:var(--red);font-size:12px;margin-top:10px;min-height:18px}
+
+/* NAV */
+#scr-app{flex-direction:column}
+#topnav{background:var(--s1);border-bottom:1px solid var(--border);height:54px;display:flex;align-items:center;padding:0 22px;gap:6px;position:sticky;top:0;z-index:100}
+.nav-logo{font-size:22px;font-weight:900;letter-spacing:4px;color:var(--gold);margin-right:20px;flex-shrink:0}
+.nav-btn{padding:7px 18px;border:1px solid transparent;border-radius:8px;background:none;color:var(--muted);cursor:pointer;font-size:13px;font-weight:500}
+.nav-btn:hover{color:var(--text);border-color:var(--border)}
+.nav-btn.active{background:var(--gold);color:#08090a;font-weight:700;border-color:var(--gold)}
+.nav-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.role-pill{font-size:12px;padding:4px 14px;border-radius:20px;border:1px solid var(--border2);color:var(--muted2)}
+.role-pill.owner{border-color:var(--gold);color:var(--gold)}
+.btn-logout{background:none;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:12px;padding:5px 14px;border-radius:8px}
+.btn-logout:hover{border-color:var(--red);color:var(--red)}
+.sync-badge{font-size:11px;padding:3px 10px;border-radius:20px;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)}
+.sync-badge.syncing{background:rgba(201,168,76,.1);color:var(--gold);border-color:rgba(201,168,76,.2)}
+.sync-badge.error{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.2)}
+
+/* PAGES */
+.page{display:none;padding:24px;max-width:1200px;margin:0 auto;width:100%}
+.page.show{display:block}
+.page-hdr{margin-bottom:22px}
+.page-title{font-size:22px;font-weight:800;color:var(--gold)}
+.page-sub{font-size:12px;color:var(--muted);margin-top:4px}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:20px;margin-bottom:18px}
+.card-hdr{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;text-transform:uppercase;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+
+/* FIELDS */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11px;color:var(--muted);letter-spacing:.8px;text-transform:uppercase}
+.field input,.field select{padding:10px 13px;border:1px solid var(--border);border-radius:var(--r);background:var(--bg);color:var(--text);font-size:14px;outline:none}
+.field input:focus,.field select:focus{border-color:var(--gold)}
+.field input[readonly]{color:var(--gold2);font-weight:700;cursor:default}
+
+/* GRIDS */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px}
+@media(max-width:700px){.g3,.g4{grid-template-columns:1fr 1fr}}
+
+/* TABLES */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{background:var(--bg);padding:9px 10px;text-align:left;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border)}
+.tbl td{padding:7px 8px;border-bottom:1px solid rgba(42,47,56,.6)}
+.tbl td input,.tbl td select{width:100%;padding:5px 8px;border:1px solid transparent;border-radius:6px;background:transparent;color:var(--text);font-size:13px;outline:none}
+.tbl td input:focus,.tbl td select:focus{border-color:var(--gold);background:var(--s2)}
+.tbl tr:hover td{background:rgba(255,255,255,.012)}
+.amt{text-align:right;color:var(--gold2);font-weight:700;font-family:'Courier New',monospace}
+.tot-row td{background:var(--s2);font-weight:700;padding:10px}
+.del-btn{background:none;border:none;color:var(--border2);cursor:pointer;font-size:15px;padding:3px 7px;border-radius:4px}
+.del-btn:hover{color:var(--red);background:rgba(239,68,68,.1)}
+.add-row{width:100%;margin-top:10px;padding:9px;background:none;border:1px dashed var(--border);border-radius:8px;color:var(--muted);cursor:pointer;font-size:12px}
+.add-row:hover{border-color:var(--gold);color:var(--gold)}
+
+/* SUMMARY */
+.sum-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:700px){.sum-grid{grid-template-columns:1fr 1fr}}
+.sum-box{background:var(--bg);border:1px solid var(--border);border-radius:var(--r);padding:16px;text-align:center}
+.sum-box.hl{border-color:var(--gold)}
+.sum-label{font-size:11px;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
+.sum-val{font-size:22px;font-weight:800;color:var(--gold);font-family:'Courier New',monospace}
+.sum-box.hl .sum-val{font-size:26px}
+
+/* BUTTONS */
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{padding:10px 22px;border-radius:var(--r);cursor:pointer;font-size:13px;font-weight:700;border:none}
+.btn-g{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#08090a}
+.btn-g:hover{opacity:.9}
+.btn-b{background:var(--blue);color:#fff}
+.btn-n{background:var(--s2);border:1px solid var(--border2);color:var(--muted2)}
+.btn-n:hover{color:var(--text);border-color:var(--gold)}
+.btn-print{padding:9px 16px;background:none;border:1px solid var(--border2);border-radius:var(--r);color:var(--muted2);cursor:pointer;font-size:13px;font-weight:600}
+.btn-print:hover{border-color:var(--gold);color:var(--gold)}
+
+/* TABS */
+.tabs{display:flex;gap:4px;margin-bottom:20px;flex-wrap:wrap}
+.tab{padding:8px 20px;border:1px solid var(--border);border-radius:8px;background:none;color:var(--muted);cursor:pointer;font-size:13px;font-weight:500}
+.tab.active{background:var(--gold);color:#08090a;font-weight:700;border-color:var(--gold)}
+
+/* AVG STRIP */
+.avg-strip{display:flex;gap:20px;flex-wrap:wrap;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;margin:12px 0}
+.avg-item{font-size:12px}
+.avg-item span{color:var(--muted)}
+.avg-item strong{color:var(--gold2);margin-left:4px;font-size:13px}
+
+/* LOT CARDS */
+.lot-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r2);padding:16px 18px;margin-bottom:10px}
+.lot-card:hover{border-color:var(--border2)}
+.lot-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px}
+.lot-id{font-size:15px;font-weight:800;color:var(--gold)}
+.lot-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted2);margin-bottom:8px}
+.lot-meta strong{color:var(--text)}
+.stat-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+.stat-chip{background:var(--s2);border:1px solid var(--border);padding:5px 12px;border-radius:8px;font-size:12px}
+.stat-chip span{color:var(--muted)}
+.stat-chip strong{color:var(--text);margin-left:4px}
+.badge{padding:3px 11px;border-radius:20px;font-size:11px;font-weight:700}
+.b-wc{background:rgba(34,197,94,.1);color:#22c55e}
+.b-sw{background:rgba(139,92,246,.1);color:#a78bfa}
+.b-ot{background:rgba(107,114,128,.1);color:#9ca3af}
+.empty-state{text-align:center;padding:50px 20px;color:var(--muted);font-size:13px}
+.search-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.search-row input,.search-row select{padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--s1);color:var(--text);font-size:13px;outline:none}
+.search-row input{flex:1;min-width:180px}
+.search-row input:focus{border-color:var(--gold)}
+.lot-info-strip{background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--muted2);display:none}
+.lot-info-strip b{color:var(--gold2)}
+
+/* PRINT */
+@media print{
+  body{background:#fff !important;color:#000 !important}
+  #topnav,#scr-login,.tabs,.actions,.btn-print,.btn,.search-row,.btn-logout,.nav-right,.del-btn,.add-row,.no-print{display:none !important}
+  .page{display:block !important;padding:0 !important;max-width:100% !important}
+  .card{background:#fff !important;border:1px solid #ccc !important;border-radius:4px !important;margin-bottom:12px !important;break-inside:avoid}
+  .card-hdr{color:#000 !important;border-bottom:1px solid #ccc !important}
+  .tbl th{background:#f5f5f5 !important;color:#333 !important}
+  .tbl td{color:#000 !important}
+  .tbl td input{border:none !important;background:transparent !important;color:#000 !important;padding:0 !important}
+  .amt{color:#000 !important}
+  .tot-row td{background:#f0f0f0 !important;color:#000 !important}
+  .avg-strip{background:#f9f9f9 !important;border:1px solid #ddd !important}
+  .avg-item span,.avg-item strong{color:#000 !important}
+  .stat-chip{background:#f5f5f5 !important;border:1px solid #ddd !important}
+  .stat-chip span,.stat-chip strong{color:#000 !important}
+  .lot-card{border:1px solid #ccc !important;background:#fff !important;break-inside:avoid}
+  .lot-id,.page-title{color:#000 !important}
+  .sum-box{background:#f9f9f9 !important;border:1px solid #ccc !important}
+  .sum-label{color:#555 !important}
+  .sum-val{color:#000 !important}
+  .field input,.field select{border:1px solid #ccc !important;background:#fff !important;color:#000 !important}
+  #print-header{display:block !important}
+}
+#print-header{display:none;text-align:center;margin-bottom:20px;padding-bottom:12px;border-bottom:2px solid #000}
+#print-header h1{font-size:28px;font-weight:900;letter-spacing:6px;margin-bottom:4px}
+#print-header p{font-size:12px;color:#555;letter-spacing:2px}
+</style>
+</head>
+<body>
+<div id="app">
+
+<div id="print-header">
+  <h1>F3</h1>
+  <p>GARMENT MANAGEMENT SYSTEM</p>
+  <p id="print-date"></p>
+</div>
+
+<!-- LOGIN -->
+<div id="scr-login" class="screen show">
+  <div class="auth-wrap">
+    <div class="f3-wordmark">F3</div>
+    <div class="f3-tagline">Garment Management System</div>
+    <div class="auth-card">
+      <div class="auth-icon">🔐</div>
+      <div class="auth-title">Sign In to F3</div>
+      <div class="auth-sub">Enter your credentials to continue</div>
+      <div class="field" style="margin-bottom:14px;text-align:left">
+        <label>User ID</label>
+        <input id="login-user" type="text" placeholder="Enter your User ID" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="field" style="margin-bottom:20px;text-align:left">
+        <label>Password</label>
+        <input id="login-pass" type="password" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <button class="btn-gold" onclick="doLogin()">Sign In</button>
+      <div id="login-err" class="err-msg"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="scr-app" class="screen">
+  <div id="topnav">
+    <div class="nav-logo">F3</div>
+    <button class="nav-btn active" id="nav-lots" onclick="showPage('lots')">Lot Manager</button>
+    <button class="nav-btn" id="nav-cost" onclick="showPage('cost')" style="display:none">Cost Sheet</button>
+    <button class="nav-btn" id="nav-audit" onclick="showPage('audit')" style="display:none">Audit Log</button>
+    <div class="nav-right">
+      <div class="sync-badge" id="sync-badge">● Live</div>
+      <div class="role-pill" id="role-pill">—</div>
+      <button class="btn-logout" onclick="doLogout()">Logout</button>
+    </div>
+  </div>
+
+  <!-- LOT MANAGER -->
+  <div id="page-lots" class="page show">
+    <div class="page-hdr">
+      <div class="page-title">Lot Manager</div>
+      <div class="page-sub">Cutting lots — fabric issued, stitching &amp; packing with auto averages</div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="lTab('add',this)">+ New Lot</button>
+      <button class="tab" onclick="lTab('list',this)">All Lots</button>
+    </div>
+    <div id="lt-add">
+      <div class="card">
+        <div class="card-hdr">Lot Details</div>
+        <div class="g3" style="margin-bottom:14px">
+          <div class="field"><label>Lot No.</label><input id="lo-no" placeholder="e.g. LOT-001"/></div>
+          <div class="field"><label>Article No.</label><input id="lo-art" placeholder="e.g. WC-001"/></div>
+          <div class="field"><label>Article Name</label><input id="lo-artname" placeholder="e.g. Fleece Windcheater"/></div>
+          <div class="field"><label>Master Name</label><input id="lo-master" placeholder="Cutting master's name"/></div>
+          <div class="field"><label>Cut Date</label><input id="lo-date" type="date"/></div>
+          <div class="field"><label>Category</label>
+            <select id="lo-cat">
+              <option>Windcheater Jacket</option><option>Sweatshirt</option>
+              <option>Hoodie</option><option>Track Jacket</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field"><label>No. of Layers</label><input id="lo-layers" type="number" placeholder="0" min="0"/></div>
+          <div class="field"><label>Total Pieces Cut</label><input id="lo-pcs" type="number" placeholder="0" min="0" oninput="calcLotAvg()"/></div>
+          <div class="field"><label>GSM / Quality Note</label><input id="lo-gsm" placeholder="e.g. 280 GSM Fleece"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">Fabric Issued</div>
+        <div style="overflow-x:auto">
+        <table class="tbl">
+          <thead><tr>
+            <th style="min-width:180px">Fabric</th><th style="min-width:90px">Unit</th>
+            <th style="min-width:120px">Qty Issued</th><th style="min-width:110px">Wastage</th>
+            <th style="min-width:120px;text-align:right">Avg / Pc</th>
+            <th style="min-width:90px;text-align:center">Wastage %</th>
+          </tr></thead>
+          <tbody>
+            <tr><td><input id="fn-main" value="Main Fabric" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--gold2);font-size:13px;font-weight:600;outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/></td>
+              <td><select id="fu-main-unit" onchange="calcLotAvg()" style="width:100%;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;outline:none"><option>Meter</option><option>Kg</option></select></td>
+              <td><input id="fu-main-iss" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td><input id="fu-main-waste" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td class="amt"><span id="avg-main">—</span></td>
+              <td style="text-align:center"><span id="wpct-main" style="color:var(--red);font-weight:700">—</span></td></tr>
+            <tr><td><input id="fn-inner" value="Inner Fabric" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--gold2);font-size:13px;font-weight:600;outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/></td>
+              <td><select id="fu-inner-unit" onchange="calcLotAvg()" style="width:100%;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;outline:none"><option>Meter</option><option>Kg</option></select></td>
+              <td><input id="fu-inner-iss" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td><input id="fu-inner-waste" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td class="amt"><span id="avg-inner">—</span></td>
+              <td style="text-align:center"><span id="wpct-inner" style="color:var(--red);font-weight:700">—</span></td></tr>
+            <tr><td><input id="fn-rib" value="Rib" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--gold2);font-size:13px;font-weight:600;outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/></td>
+              <td style="color:var(--muted);font-size:12px;padding-left:10px">Kg</td>
+              <td><input id="fu-rib-iss" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td><input id="fu-rib-waste" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td class="amt"><span id="avg-rib">—</span></td>
+              <td style="text-align:center"><span id="wpct-rib" style="color:var(--red);font-weight:700">—</span></td></tr>
+            <tr><td><input id="fn-pock" value="Pocketing & Sleeves" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--gold2);font-size:13px;font-weight:600;outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/></td>
+              <td><select id="fu-pock-unit" onchange="calcLotAvg()" style="width:100%;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;outline:none"><option>Meter</option><option>Kg</option></select></td>
+              <td><input id="fu-pock-iss" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td><input id="fu-pock-waste" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td class="amt"><span id="avg-pock">—</span></td>
+              <td style="text-align:center"><span id="wpct-pock" style="color:var(--red);font-weight:700">—</span></td></tr>
+            <tr><td><input id="fn-felt" value="Felt" style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--gold2);font-size:13px;font-weight:600;outline:none" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/></td>
+              <td style="color:var(--muted);font-size:12px;padding-left:10px">Kg</td>
+              <td><input id="fu-felt-iss" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td><input id="fu-felt-waste" type="number" placeholder="0" step="0.001" min="0" oninput="calcLotAvg()"/></td>
+              <td class="amt"><span id="avg-felt">—</span></td>
+              <td style="text-align:center"><span id="wpct-felt" style="color:var(--red);font-weight:700">—</span></td></tr>
+          </tbody>
+        </table>
+        </div>
+        <div class="avg-strip">
+          <div class="avg-item"><span>Total Pcs Cut:</span><strong id="a-pcs-disp">0</strong></div>
+          <div class="avg-item"><span>Overall Wastage %:</span><strong id="a-wpct" style="color:var(--red)">—</strong></div>
+          <div class="avg-item"><span>Overall Efficiency:</span><strong id="a-eff" style="color:var(--green)">—</strong></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">Stitching &amp; Packing Record</div>
+        <div class="g3">
+          <div class="field"><label>Tailor Stitched Pcs</label><input id="lo-stitched" type="number" placeholder="0" min="0" oninput="calcLotAvg()"/></div>
+          <div class="field"><label>Packed Pcs Received</label><input id="lo-packed" type="number" placeholder="0" min="0" oninput="calcLotAvg()"/></div>
+          <div class="field"><label>Shortage</label><input id="lo-shortage" type="number" placeholder="Auto" readonly/></div>
+        </div>
+        <div class="avg-strip" style="margin-top:14px">
+          <div class="avg-item"><span>Stitching Efficiency:</span><strong id="stitch-eff" style="color:var(--green)">—</strong></div>
+          <div class="avg-item"><span>Packing Efficiency:</span><strong id="pack-eff" style="color:var(--blue)">—</strong></div>
+        </div>
+      </div>
+      <div class="card" style="padding:14px 20px">
+        <div class="field"><label>Remarks</label><input id="lo-rem" placeholder="Any notes about this lot..."/></div>
+        <div class="actions" style="margin-top:12px">
+          <button class="btn btn-g" onclick="saveLot()">💾 Save Lot</button>
+          <button class="btn btn-n" onclick="clearLot()">✕ Clear</button>
+        </div>
+      </div>
+    </div>
+    <div id="lt-list" style="display:none">
+      <div class="search-row">
+        <input id="ls-q" placeholder="Search lot no., article, master..." oninput="renderLots()"/>
+        <select id="ls-cat" onchange="renderLots()">
+          <option value="">All Categories</option>
+          <option>Windcheater Jacket</option><option>Sweatshirt</option><option>Hoodie</option><option>Track Jacket</option><option>Other</option>
+        </select>
+        <button class="btn-print" onclick="printSection('lots')">🖨️ Print All</button>
+      </div>
+      <div id="lots-out"></div>
+      <div id="lots-empty" class="empty-state">No lots saved yet.</div>
+    </div>
+  </div>
+
+  <!-- COST SHEET -->
+  <div id="page-cost" class="page">
+    <div class="page-hdr">
+      <div class="page-title">Cost Sheet Builder 🔒</div>
+      <div class="page-sub">Owner only — cost sheets linked by lot and article</div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" onclick="csTab('create',this)">+ Create Sheet</button>
+      <button class="tab" onclick="csTab('view',this)">Saved Sheets</button>
+    </div>
+    <div id="cs-create">
+      <div class="card">
+        <div class="card-hdr">Article &amp; Lot Details</div>
+        <div id="lot-info-strip" class="lot-info-strip"></div>
+        <div class="g3">
+          <div class="field"><label>Article Name</label><input id="cs-art" placeholder="e.g. WC-001 Fleece Jacket"/></div>
+          <div class="field"><label>Lot No.</label><input id="cs-lot" placeholder="e.g. LOT-001" oninput="autoFillFromLot()"/></div>
+          <div class="field"><label>Category</label>
+            <select id="cs-cat"><option>Windcheater Jacket</option><option>Sweatshirt</option><option>Hoodie</option><option>Track Jacket</option><option>Other</option></select>
+          </div>
+          <div class="field"><label>Season</label><input id="cs-sea" placeholder="e.g. W25 / S26"/></div>
+          <div class="field"><label>Buyer / Brand</label><input id="cs-buyer" placeholder="Buyer name"/></div>
+          <div class="field"><label>Date</label><input id="cs-date" type="date"/></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hdr">Fabric &amp; Raw Materials</div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th style="min-width:180px">Material</th><th style="min-width:70px">Unit</th><th style="min-width:110px">Consumption</th><th style="min-width:120px">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
+            <tbody id="mat-body"></tbody>
+            <tfoot><tr class="tot-row"><td colspan="4" style="text-align:right;color:var(--muted);font-size:11px">TOTAL MATERIALS</td><td class="amt" id="mat-tot">₹0.00</td><td></td></tr></tfoot>
+          </table>
+        </div>
+        <button class="add-row" onclick="addRow('mat')">+ Add Row</button>
+      </div>
+      <div class="card">
+        <div class="card-hdr">Trims &amp; Accessories</div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th style="min-width:180px">Item</th><th style="min-width:70px">Unit</th><th style="min-width:110px">Qty / Pc</th><th style="min-width:120px">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
+            <tbody id="trim-body"></tbody>
+            <tfoot><tr class="tot-row"><td colspan="4" style="text-align:right;color:var(--muted);font-size:11px">TOTAL TRIMS</td><td class="amt" id="trim-tot">₹0.00</td><td></td></tr></tfoot>
+          </table>
+        </div>
+        <button class="add-row" onclick="addRow('trim')">+ Add Row</button>
+      </div>
+      <div class="card">
+        <div class="card-hdr">Labour &amp; Overheads</div>
+        <div style="overflow-x:auto">
+          <table class="tbl">
+            <thead><tr><th style="min-width:200px">Process</th><th style="min-width:100px">Basis</th><th style="min-width:120px" colspan="2">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
+            <tbody id="lab-body"></tbody>
+            <tfoot><tr class="tot-row"><td colspan="4" style="text-align:right;color:var(--muted);font-size:11px">TOTAL LABOUR</td><td class="amt" id="lab-tot">₹0.00</td><td></td></tr></tfoot>
+          </table>
+        </div>
+        <button class="add-row" onclick="addRow('lab')">+ Add Row</button>
+      </div>
+      <div class="card">
+        <div class="sum-grid">
+          <div class="sum-box"><div class="sum-label">Materials</div><div class="sum-val" id="s-mat">₹0</div></div>
+          <div class="sum-box"><div class="sum-label">Trims</div><div class="sum-val" id="s-trim">₹0</div></div>
+          <div class="sum-box"><div class="sum-label">Labour</div><div class="sum-val" id="s-lab">₹0</div></div>
+          <div class="sum-box hl"><div class="sum-label">Total Cost / Pc</div><div class="sum-val" id="s-total">₹0</div></div>
+        </div>
+        <div class="g4" style="margin-top:16px">
+          <div class="field"><label>Profit Margin (%)</label><input id="cs-margin" type="number" value="15" min="0" oninput="recalc()"/></div>
+          <div class="field"><label>Selling Price / Pc</label><input id="cs-sp" readonly/></div>
+          <div class="field"><label>Order Qty (Pcs)</label><input id="cs-qty" type="number" value="500" oninput="recalc()"/></div>
+          <div class="field"><label>Total Order Value</label><input id="cs-tov" readonly style="color:var(--green)"/></div>
+        </div>
+        <div class="actions">
+          <button class="btn btn-g" onclick="saveCS()">💾 Save Cost Sheet</button>
+          <button class="btn btn-b" onclick="newCS()">+ New Sheet</button>
+        </div>
+      </div>
+    </div>
+    <div id="cs-view" style="display:none">
+      <div class="search-row">
+        <input id="csv-q" placeholder="Search article, lot no., buyer..." oninput="renderSheets()"/>
+        <select id="csv-lot" onchange="renderSheets()"><option value="">All Lots</option></select>
+        <select id="csv-cat" onchange="renderSheets()">
+          <option value="">All Categories</option>
+          <option>Windcheater Jacket</option><option>Sweatshirt</option><option>Hoodie</option><option>Track Jacket</option><option>Other</option>
+        </select>
+        <button class="btn-print" onclick="printSection('cost')">🖨️ Print All</button>
+      </div>
+      <div id="sheets-out"></div>
+      <div id="sheets-empty" class="empty-state">No cost sheets saved yet.</div>
+    </div>
+  </div>
+
+  <!-- AUDIT LOG -->
+  <div id="page-audit" class="page">
+    <div class="page-hdr">
+      <div class="page-title">Audit Log 🔒</div>
+      <div class="page-sub">Owner only — every login and action recorded with date &amp; time</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center">
+      <select id="aud-filter" onchange="renderAudit()" style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--s1);color:var(--text);font-size:13px;outline:none">
+        <option value="">All Actions</option>
+        <option value="LOGIN">Logins</option>
+        <option value="LOGOUT">Logouts</option>
+        <option value="LOT">Lot Actions</option>
+        <option value="COST">Cost Sheet Actions</option>
+      </select>
+      <select id="aud-role" onchange="renderAudit()" style="padding:9px 12px;border:1px solid var(--border);border-radius:var(--r);background:var(--s1);color:var(--text);font-size:13px;outline:none">
+        <option value="">All Users</option>
+        <option value="owner">Owner</option>
+        <option value="staff">Staff</option>
+      </select>
+      <button onclick="clearAudit()" style="padding:9px 16px;background:none;border:1px solid var(--red);border-radius:var(--r);color:var(--red);cursor:pointer;font-size:13px;margin-left:auto">Clear Log</button>
+    </div>
+    <div class="card" style="padding:0;overflow:hidden">
+      <table class="tbl" id="audit-tbl">
+        <thead><tr>
+          <th style="min-width:160px">Date &amp; Time</th>
+          <th style="min-width:70px">User</th>
+          <th style="min-width:120px">Action</th>
+          <th>Details</th>
+        </tr></thead>
+        <tbody id="audit-body"></tbody>
+      </table>
+      <div id="audit-empty" class="empty-state">No activity recorded yet.</div>
+    </div>
+  </div>
+
+</div><!-- /scr-app -->
+</div>
+
+<script>
+// ══════════════════════════════
+// CONFIG
+// ══════════════════════════════
+const SB_URL = 'https://jdybyjchsfldiyorejtv.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpkeWJ5amNoc2ZsZGl5b3JlanR2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2MzU3NjAsImV4cCI6MjA5NTIxMTc2MH0.WQ6VFrNMR3S-vuFjxGB5BWdpvCc_fNaldtneEjM0HFo';
+// Supabase REST endpoint
+const SB_REST = SB_URL + '/rest/v1';
+const USERS  = { F3BOSS:{pass:'A',role:'owner'}, Admin:{pass:'Admin',role:'staff'} };
+const FAB_KEYS   = ['main','inner','rib','pock','felt'];
+const FAB_LABELS = {main:'Main Fabric',inner:'Inner Fabric',rib:'Rib',pock:'Pocketing & Sleeves',felt:'Felt'};
+const FAB_CS_MAP = {main:{rowIdx:0},inner:{rowIdx:1},rib:{rowIdx:2},pock:{rowIdx:3},felt:{rowIdx:4}};
+
+// ══════════════════════════════
+// STATE
+// ══════════════════════════════
+let currentUser = null;
+let lots=[], sheets=[], auditLog=[];
+let matR=[], trimR=[], labR=[];
+
+// ══════════════════════════════
+// HELPERS
+// ══════════════════════════════
+const $id = id => document.getElementById(id);
+const val  = id => ($id(id)||{}).value||'';
+const setVal = (id,v) => { if($id(id)) $id(id).value=v; };
+const esc  = s => (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const now  = () => new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true});
+
+function setSyncBadge(state){
+  const b=$id('sync-badge');
+  if(!b)return;
+  if(state==='ok'){b.textContent='● Live';b.className='sync-badge';}
+  else if(state==='syncing'){b.textContent='↻ Syncing';b.className='sync-badge syncing';}
+  else{b.textContent='⚠ Offline';b.className='sync-badge error';}
+}
+
+// ══════════════════════════════
+// SUPABASE API
+// ══════════════════════════════
+async function sbFetch(method, table, body=null, query=''){
+  setSyncBadge('syncing');
+  try{
+    const headers = {
+      'apikey'       : SB_KEY,
+      'Authorization': 'Bearer ' + SB_KEY,
+      'Content-Type' : 'application/json',
+    };
+    if(method==='POST')   headers['Prefer'] = 'return=representation';
+    if(method==='DELETE') headers['Prefer'] = 'return=minimal';
+
+    const opts = { method, headers };
+    if(body) opts.body = JSON.stringify(body);
+
+    const url = `${SB_URL}/rest/v1/${table}${query}`;
+    const res  = await fetch(url, opts);
+
+    if(res.status === 204 || res.status === 200 && method==='DELETE'){
+      setSyncBadge('ok'); return true;
+    }
+    if(!res.ok){
+      const err = await res.text();
+      console.error('Supabase error:', res.status, err);
+      setSyncBadge('error'); return null;
+    }
+    const data = await res.json();
+    setSyncBadge('ok');
+    return data;
+  } catch(e){
+    setSyncBadge('error');
+    console.error('Supabase error:', e.message || e);
+    return null;
+  }
+}
+
+async function dbLoad(table){ return await sbFetch('GET',table,'','?order=id.desc'); }
+async function dbInsert(table,row){ return await sbFetch('POST',table,row); }
+async function dbDelete(table,id){ return await sbFetch('DELETE',table,null,`?id=eq.${id}`); }
+async function dbClear(table){ return await sbFetch('DELETE',table,null,'?id=gt.0'); }
+
+// ══════════════════════════════
+// LOAD ALL DATA FROM CLOUD
+// ══════════════════════════════
+async function loadAllData(){
+  setSyncBadge('syncing');
+  const [l,s,a] = await Promise.all([
+    dbLoad('lots'), dbLoad('cost_sheets'), dbLoad('audit_log')
+  ]);
+  lots     = (l||[]).map(r=>r.data);
+  sheets   = (s||[]).map(r=>r.data);
+  auditLog = (a||[]).map(r=>r.data);
+  setSyncBadge('ok');
+}
+
+// ══════════════════════════════
+// LOGIN
+// ══════════════════════════════
+function doLogin(){
+  const u=val('login-user').trim(), p=val('login-pass');
+  $id('login-err').textContent='';
+  if(!u||!p){ $id('login-err').textContent='Please enter both User ID and Password.'; return; }
+  if(USERS[u]&&USERS[u].pass===p){
+    currentUser={role:USERS[u].role, username:u};
+    setVal('login-pass','');
+    enterApp();
+  } else {
+    $id('login-err').textContent='Incorrect User ID or Password.';
+    setVal('login-pass','');
+    $id('login-pass').focus();
+  }
+}
+
+async function enterApp(){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  $id('scr-app').classList.add('show');
+  const pill=$id('role-pill');
+  if(currentUser.role==='owner'){
+    pill.textContent='Owner 👑'; pill.className='role-pill owner';
+    $id('nav-cost').style.display='block';
+    $id('nav-audit').style.display='block';
+  } else {
+    pill.textContent='Staff 👷'; pill.className='role-pill';
+    $id('nav-cost').style.display='none';
+    $id('nav-audit').style.display='none';
+  }
+  await loadAllData();
+  logAction('LOGIN','Signed in as '+(currentUser.role==='owner'?'Owner 👑':'Staff 👷')+' — User: '+currentUser.username);
+  showPage('lots');
+  initCS();
+  const today=new Date().toISOString().split('T')[0];
+  setVal('lo-date',today); setVal('cs-date',today);
+}
+
+function doLogout(){
+  if(currentUser) logAction('LOGOUT','Signed out — '+currentUser.username);
+  currentUser=null;
+  setVal('login-user',''); setVal('login-pass','');
+  $id('login-err').textContent='';
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('show'));
+  $id('scr-login').classList.add('show');
+}
+
+// ══════════════════════════════
+// PAGE NAV
+// ══════════════════════════════
+function showPage(p){
+  if(!currentUser)return;
+  if(currentUser.role==='staff'&&(p==='cost'||p==='audit'))return;
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('show'));
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  $id('page-'+p).classList.add('show');
+  const nb=$id('nav-'+p);
+  if(nb) nb.classList.add('active');
+  if(p==='lots')  { renderLots(); logAction('LOT VIEWED','Opened Lot Manager'); }
+  if(p==='cost')  { logAction('COST VIEWED','Opened Cost Sheet'); }
+  if(p==='audit') renderAudit();
+}
+
+// ══════════════════════════════
+// AUDIT
+// ══════════════════════════════
+async function logAction(action, details){
+  const entry={id:Date.now(),datetime:now(),role:currentUser?currentUser.role:'?',action,details};
+  auditLog.unshift(entry);
+  await dbInsert('audit_log',{id:entry.id,data:entry});
+}
+
+function renderAudit(){
+  const fa=val('aud-filter'), fr=val('aud-role');
+  const f=auditLog.filter(e=>(!fa||e.action.includes(fa))&&(!fr||e.role===fr));
+  const tbody=$id('audit-body');
+  tbody.innerHTML='';
+  $id('audit-empty').style.display=f.length?'none':'block';
+  $id('audit-tbl').style.display=f.length?'table':'none';
+  const colors={
+    'LOGIN' :{bg:'rgba(34,197,94,.1)',c:'#22c55e'},
+    'LOGOUT':{bg:'rgba(107,114,128,.1)',c:'#9ca3af'},
+    'LOT SAVED'  :{bg:'rgba(201,168,76,.1)',c:'#c9a84c'},
+    'LOT DELETED':{bg:'rgba(239,68,68,.1)',c:'#ef4444'},
+    'LOT VIEWED' :{bg:'rgba(201,168,76,.06)',c:'#c9a84c'},
+    'COST SAVED'  :{bg:'rgba(59,130,246,.1)',c:'#60a5fa'},
+    'COST DELETED':{bg:'rgba(239,68,68,.1)',c:'#ef4444'},
+    'COST VIEWED' :{bg:'rgba(139,92,246,.1)',c:'#a78bfa'},
+    'COST LOADED' :{bg:'rgba(59,130,246,.08)',c:'#60a5fa'},
+  };
+  f.forEach(e=>{
+    const cl=colors[e.action]||{bg:'rgba(107,114,128,.1)',c:'#9ca3af'};
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-size:12px;color:var(--muted2);white-space:nowrap">${e.datetime}</td>
+      <td><span style="font-size:12px;font-weight:700;color:${e.role==='owner'?'var(--gold)':'var(--muted2)'}">${e.role==='owner'?'👑':'👷'} ${e.role}</span></td>
+      <td><span style="padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;background:${cl.bg};color:${cl.c}">${e.action}</span></td>
+      <td style="font-size:13px">${esc(e.details)}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+async function clearAudit(){
+  if(!confirm('Clear entire audit log?'))return;
+  await dbClear('audit_log');
+  auditLog=[];
+  renderAudit();
+}
+
+// ══════════════════════════════
+// LOT MANAGER
+// ══════════════════════════════
+function lTab(t,el){
+  document.querySelectorAll('#page-lots .tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  $id('lt-add').style.display=t==='add'?'block':'none';
+  $id('lt-list').style.display=t==='list'?'block':'none';
+  if(t==='list')renderLots();
+}
+
+function calcLotAvg(){
+  const pcs=parseInt(val('lo-pcs')||0);
+  $id('a-pcs-disp').textContent=pcs.toLocaleString();
+  let tIss=0,tWaste=0;
+  FAB_KEYS.forEach(k=>{
+    const iss=parseFloat(val('fu-'+k+'-iss')||0);
+    const waste=parseFloat(val('fu-'+k+'-waste')||0);
+    tIss+=iss; tWaste+=waste;
+    $id('avg-'+k).textContent=(iss>0&&pcs>0)?(iss/pcs).toFixed(3):'—';
+    $id('wpct-'+k).textContent=iss>0?(waste/iss*100).toFixed(1)+'%':'—';
+  });
+  $id('a-wpct').textContent=tIss>0?(tWaste/tIss*100).toFixed(2)+'%':'—';
+  $id('a-eff').textContent=tIss>0?((tIss-tWaste)/tIss*100).toFixed(2)+'%':'—';
+  const st=parseInt(val('lo-stitched')||0), pk=parseInt(val('lo-packed')||0);
+  setVal('lo-shortage',st>0?st-pk:'');
+  $id('stitch-eff').textContent=pcs>0&&st>0?(st/pcs*100).toFixed(1)+'%':'—';
+  $id('pack-eff').textContent=st>0&&pk>0?(pk/st*100).toFixed(1)+'%':'—';
+}
+
+function getFabData(){
+  const data={};
+  FAB_KEYS.forEach(k=>{
+    const unitEl=$id('fu-'+k+'-unit');
+    const nameEl=$id('fn-'+k);
+    const iss=parseFloat(val('fu-'+k+'-iss')||0);
+    const waste=parseFloat(val('fu-'+k+'-waste')||0);
+    const pcs=parseInt(val('lo-pcs')||0);
+    data[k]={
+      label:nameEl?nameEl.value.trim()||FAB_LABELS[k]:FAB_LABELS[k],
+      unit:unitEl?unitEl.value:'Kg',iss,waste,
+      avgPerPc:(iss>0&&pcs>0)?(iss/pcs).toFixed(3):'—',
+      wpct:iss>0?(waste/iss*100).toFixed(1):'—'
+    };
+  });
+  return data;
+}
+
+async function saveLot(){
+  const no=val('lo-no').trim();
+  if(!no){alert('Please enter a Lot No.');return;}
+  if(!val('lo-art').trim()){alert('Please enter an Article No.');return;}
+  const pcs=parseInt(val('lo-pcs')||0);
+  calcLotAvg();
+  const fabData=getFabData();
+  let tIss=0,tWaste=0;
+  FAB_KEYS.forEach(k=>{tIss+=fabData[k].iss;tWaste+=fabData[k].waste;});
+  const lot={
+    id:Date.now(),no,art:val('lo-art'),artname:val('lo-artname'),
+    master:val('lo-master'),date:val('lo-date'),cat:val('lo-cat'),
+    layers:val('lo-layers'),gsm:val('lo-gsm'),pcs,fabData,tIss,tWaste,
+    overallWpct:tIss>0?(tWaste/tIss*100).toFixed(2):0,
+    overallEff:tIss>0?((tIss-tWaste)/tIss*100).toFixed(2):0,
+    stitched:parseInt(val('lo-stitched')||0),
+    packed:parseInt(val('lo-packed')||0),
+    shortage:parseInt(val('lo-shortage')||0),
+    rem:val('lo-rem')
+  };
+  await dbInsert('lots',{id:lot.id,data:lot});
+  lots.unshift(lot);
+  updateSheetLotFilter();
+  clearLot();
+  logAction('LOT SAVED','Lot: '+no+' | Article: '+(lot.artname||lot.art));
+  alert('✓ Lot saved: '+no);
+}
+
+const FAB_DEFAULTS={main:'Main Fabric',inner:'Inner Fabric',rib:'Rib',pock:'Pocketing & Sleeves',felt:'Felt'};
+function clearLot(){
+  ['lo-no','lo-art','lo-artname','lo-master','lo-layers','lo-gsm',
+   'lo-pcs','lo-stitched','lo-packed','lo-shortage','lo-rem'].forEach(id=>setVal(id,''));
+  FAB_KEYS.forEach(k=>{
+    setVal('fu-'+k+'-iss','');setVal('fu-'+k+'-waste','');
+    setVal('fn-'+k, FAB_DEFAULTS[k]);
+    $id('avg-'+k).textContent='—';$id('wpct-'+k).textContent='—';});
+  $id('a-pcs-disp').textContent='0';
+  $id('a-wpct').textContent='—';$id('a-eff').textContent='—';
+  $id('stitch-eff').textContent='—';$id('pack-eff').textContent='—';
+  setVal('lo-date',new Date().toISOString().split('T')[0]);
+}
+
+function renderLots(){
+  const q=val('ls-q').toLowerCase(),fc=val('ls-cat');
+  const f=lots.filter(l=>(!q||[l.no,l.art,l.artname,l.master,l.gsm].some(v=>(v+'').toLowerCase().includes(q)))&&(!fc||l.cat===fc));
+  $id('lots-empty').style.display=f.length?'none':'block';
+  const cc=c=>c.includes('Wind')?'b-wc':c.includes('Sweat')?'b-sw':'b-ot';
+  $id('lots-out').innerHTML=f.map(l=>{
+    const fabRows=FAB_KEYS.map(k=>{
+      const d=l.fabData[k]; if(!d||!d.iss)return '';
+      return `<tr><td style="color:var(--muted2);font-size:12px">${d.label||FAB_LABELS[k]}</td>
+        <td style="font-size:12px">${d.unit}</td><td style="font-size:12px">${d.iss}</td>
+        <td style="font-size:12px">${d.waste||0}</td>
+        <td style="font-size:12px;color:var(--gold2);font-weight:700">${d.avgPerPc}</td>
+        <td style="font-size:12px;color:var(--red);font-weight:700">${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
+    }).filter(Boolean).join('');
+    return `<div class="lot-card">
+      <div class="lot-hdr">
+        <span class="lot-id">📋 ${esc(l.no)}</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge ${cc(l.cat)}">${esc(l.cat)}</span>
+          <span style="color:var(--green);font-size:12px;font-weight:600">${l.date}</span>
+        </div>
+      </div>
+      <div class="lot-meta">
+        <span>Art No: <strong>${esc(l.art)}</strong></span>
+        <span>Name: <strong>${esc(l.artname)||'—'}</strong></span>
+        <span>Master: <strong>${esc(l.master)||'—'}</strong></span>
+        <span>Layers: <strong>${l.layers||'—'}</strong></span>
+        <span>GSM: <strong>${esc(l.gsm)||'—'}</strong></span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-chip"><span>Pcs Cut</span><strong>${l.pcs.toLocaleString()}</strong></div>
+        <div class="stat-chip"><span>Stitched</span><strong style="color:var(--green)">${l.stitched.toLocaleString()}</strong></div>
+        <div class="stat-chip"><span>Packed</span><strong style="color:var(--blue)">${l.packed.toLocaleString()}</strong></div>
+        <div class="stat-chip"><span>Shortage</span><strong style="color:var(--red)">${l.shortage}</strong></div>
+        <div class="stat-chip"><span>Wastage</span><strong style="color:var(--red)">${l.overallWpct}%</strong></div>
+        <div class="stat-chip"><span>Efficiency</span><strong style="color:var(--green)">${l.overallEff}%</strong></div>
+      </div>
+      ${fabRows?`<div style="overflow-x:auto;margin-top:12px"><table class="tbl" style="font-size:12px">
+        <thead><tr><th>Fabric</th><th>Unit</th><th>Issued</th><th>Wastage</th><th>Avg/Pc</th><th>Wastage%</th></tr></thead>
+        <tbody>${fabRows}</tbody></table></div>`:''}
+      ${l.rem?`<div style="margin-top:8px;font-size:12px;color:var(--muted);font-style:italic">${esc(l.rem)}</div>`:''}
+      <div style="text-align:right;margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+        ${currentUser&&currentUser.role==='owner'?`<button onclick="loadLotToCS('${l.id}')" style="padding:5px 14px;background:var(--s2);border:1px solid var(--border2);border-radius:6px;color:var(--gold2);cursor:pointer;font-size:12px;font-weight:600">Create Cost Sheet →</button>`:''}
+        <button onclick="printLot('${l.id}')" style="padding:5px 14px;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted2);cursor:pointer;font-size:12px;font-weight:600">🖨️ Print</button>
+        <button onclick="delLot('${l.id}')" style="padding:5px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--red);cursor:pointer;font-size:12px;font-weight:600">Delete</button>
+      </div></div>`;
+  }).join('');
+}
+
+async function delLot(id){
+  const l=lots.find(x=>x.id==id);
+  if(!confirm('Delete this lot?'))return;
+  await dbDelete('lots',id);
+  lots=lots.filter(l=>l.id!=id);
+  logAction('LOT DELETED','Lot: '+(l?l.no:'#'+id));
+  renderLots();
+}
+
+function loadLotToCS(id){
+  const l=lots.find(x=>x.id==id); if(!l)return;
+  showPage('cost');
+  csTab('create',document.querySelector('#page-cost .tab'));
+  setVal('cs-art',l.artname||l.art);
+  setVal('cs-lot',l.no);
+  $id('cs-cat').value=l.cat;
+  setVal('cs-date',l.date);
+  autoFillFromLot();
+  logAction('COST VIEWED','Create Cost Sheet from Lot: '+l.no);
+}
+
+// ══════════════════════════════
+// COST SHEET
+// ══════════════════════════════
+const matDef=[
+  {n:'Main Fabric',u:'Meter',c:'',r:''},{n:'Inner Fabric',u:'Meter',c:'',r:''},
+  {n:'Rib',u:'Kg',c:'',r:''},{n:'Pocketing & Sleeves',u:'Meter',c:'',r:''},
+  {n:'Felt',u:'Kg',c:'',r:''}
+];
+const trimDef=[
+  {n:'Main Zipper',u:'Pcs',c:1,r:''},{n:'Pocket Zipper',u:'Pcs',c:'',r:''},
+  {n:'Woven Label',u:'Pcs',c:1,r:''},{n:'Care Label',u:'Pcs',c:1,r:''},
+  {n:'Thread',u:'Cone',c:'',r:''},{n:'Button / Snap',u:'Pcs',c:'',r:''},
+  {n:'Drawcord',u:'Meter',c:'',r:''},{n:'Poly Bag + Tag',u:'Pcs',c:1,r:''}
+];
+const labDef=[
+  {n:'Cutting',u:'Per Pc',r:''},{n:'Stitching / Sewing',u:'Per Pc',r:''},
+  {n:'Linking / Joining',u:'Per Pc',r:''},{n:'Finishing & Pressing',u:'Per Pc',r:''},
+  {n:'Quality Check',u:'Per Pc',r:''},{n:'Packing',u:'Per Pc',r:''}
+];
+
+function initCS(){
+  matR=matDef.map(r=>({...r}));
+  trimR=trimDef.map(r=>({...r}));
+  labR=labDef.map(r=>({...r}));
+  renderAllCS();
+}
+function renderAllCS(){ renderCST('mat-body',matR,'mat'); renderCST('trim-body',trimR,'trim'); renderCST('lab-body',labR,'lab'); recalc(); }
+
+function renderCST(tbId,rows,type){
+  const tb=$id(tbId); tb.innerHTML='';
+  rows.forEach((row,i)=>{
+    const tr=document.createElement('tr');
+    if(type==='lab'){
+      tr.innerHTML=`<td><input value="${esc(row.n)}" placeholder="Process" onchange="labR[${i}].n=this.value"/></td>
+        <td><input value="${esc(row.u)}" style="width:90px" onchange="labR[${i}].u=this.value"/></td>
+        <td colspan="2"><input type="number" value="${row.r||''}" placeholder="₹" style="width:130px" onchange="labR[${i}].r=this.value;recalc()"/></td>
+        <td class="amt">₹${parseFloat(row.r||0).toFixed(2)}</td>
+        <td><button class="del-btn" onclick="delRow('lab',${i})">✕</button></td>`;
+    } else {
+      tr.innerHTML=`<td><input value="${esc(row.n)}" placeholder="Item" onchange="${type}R[${i}].n=this.value"/></td>
+        <td><input value="${esc(row.u)}" style="width:70px" onchange="${type}R[${i}].u=this.value"/></td>
+        <td><input type="number" value="${row.c||''}" placeholder="0.000" step="0.001" style="width:110px" onchange="${type}R[${i}].c=this.value;recalc()"/></td>
+        <td><input type="number" value="${row.r||''}" placeholder="0.00" style="width:110px" onchange="${type}R[${i}].r=this.value;recalc()"/></td>
+        <td class="amt">₹${(parseFloat(row.c||0)*parseFloat(row.r||0)).toFixed(2)}</td>
+        <td><button class="del-btn" onclick="delRow('${type}',${i})">✕</button></td>`;
+    }
+    tb.appendChild(tr);
+  });
+}
+
+function delRow(type,i){ const m={mat:matR,trim:trimR,lab:labR},t={mat:'mat-body',trim:'trim-body',lab:'lab-body'}; m[type].splice(i,1); renderCST(t[type],m[type],type); recalc(); }
+function addRow(type){ const m={mat:matR,trim:trimR,lab:labR},d={mat:{n:'',u:'Meter',c:'',r:''},trim:{n:'',u:'Pcs',c:'',r:''},lab:{n:'',u:'Per Pc',r:''}},t={mat:'mat-body',trim:'trim-body',lab:'lab-body'}; m[type].push({...d[type]}); renderCST(t[type],m[type],type); }
+
+function recalc(){
+  const mT=matR.reduce((s,r)=>s+parseFloat(r.c||0)*parseFloat(r.r||0),0);
+  const tT=trimR.reduce((s,r)=>s+parseFloat(r.c||0)*parseFloat(r.r||0),0);
+  const lT=labR.reduce((s,r)=>s+parseFloat(r.r||0),0);
+  const tot=mT+tT+lT, mg=parseFloat(val('cs-margin')||0), qty=parseFloat(val('cs-qty')||0), sp=tot*(1+mg/100);
+  $id('mat-tot').textContent='₹'+mT.toFixed(2); $id('trim-tot').textContent='₹'+tT.toFixed(2); $id('lab-tot').textContent='₹'+lT.toFixed(2);
+  $id('s-mat').textContent='₹'+Math.round(mT); $id('s-trim').textContent='₹'+Math.round(tT); $id('s-lab').textContent='₹'+Math.round(lT);
+  $id('s-total').textContent='₹'+tot.toFixed(2);
+  setVal('cs-sp','₹'+sp.toFixed(2));
+  setVal('cs-tov','₹'+(sp*qty).toLocaleString('en-IN',{maximumFractionDigits:2}));
+}
+
+function autoFillFromLot(){
+  const lotNo=val('cs-lot').trim(), strip=$id('lot-info-strip');
+  if(!lotNo){strip.style.display='none';return;}
+  const lot=lots.find(l=>l.no.trim().toLowerCase()===lotNo.toLowerCase());
+  if(!lot){
+    strip.style.display='block';
+    strip.style.cssText='display:block;background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.25);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;font-size:12px;color:#ef4444';
+    strip.innerHTML='⚠️ Lot <b>'+esc(lotNo)+'</b> not found. Save the lot first.'; return;
+  }
+  strip.style.cssText='display:block;background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;font-size:12px;color:var(--muted2)';
+  strip.innerHTML='✓ <b>'+esc(lot.no)+'</b> — Article: <b>'+esc(lot.artname||lot.art)+'</b> | Master: <b>'+esc(lot.master||'—')+'</b> | Pcs: <b>'+lot.pcs.toLocaleString()+'</b> | Date: <b>'+lot.date+'</b>';
+  if(!val('cs-art')) setVal('cs-art',lot.artname||lot.art);
+  $id('cs-cat').value=lot.cat;
+  setVal('cs-date',lot.date);
+  FAB_KEYS.forEach((k,i)=>{
+    const fd=lot.fabData[k]; if(!fd)return;
+    const avg=fd.avgPerPc!=='—'?parseFloat(fd.avgPerPc):0;
+    if(matR[i]){
+      matR[i].n=fd.label||FAB_LABELS[k]; // use custom fabric name from lot
+      matR[i].u=fd.unit||(k==='rib'||k==='felt'?'Kg':'Meter');
+      if(avg>0)matR[i].c=avg;
+    }
+  });
+  renderCST('mat-body',matR,'mat'); recalc();
+}
+
+async function saveCS(){
+  const art=val('cs-art').trim(); if(!art){alert('Please enter an Article Name.');return;}
+  const mT=matR.reduce((s,r)=>s+parseFloat(r.c||0)*parseFloat(r.r||0),0);
+  const tT=trimR.reduce((s,r)=>s+parseFloat(r.c||0)*parseFloat(r.r||0),0);
+  const lT=labR.reduce((s,r)=>s+parseFloat(r.r||0),0);
+  const tot=mT+tT+lT, sp=tot*(1+parseFloat(val('cs-margin')||0)/100);
+  const s={id:Date.now(),art,lot:val('cs-lot'),cat:val('cs-cat'),sea:val('cs-sea'),buyer:val('cs-buyer'),date:val('cs-date'),
+    matR:JSON.parse(JSON.stringify(matR)),trimR:JSON.parse(JSON.stringify(trimR)),labR:JSON.parse(JSON.stringify(labR)),
+    margin:val('cs-margin'),qty:val('cs-qty'),total:'₹'+tot.toFixed(2),sp:'₹'+sp.toFixed(2),
+    tov:'₹'+(sp*parseFloat(val('cs-qty')||0)).toLocaleString('en-IN',{maximumFractionDigits:2})};
+  await dbInsert('cost_sheets',{id:s.id,data:s});
+  sheets.unshift(s);
+  updateSheetLotFilter();
+  logAction('COST SAVED','Article: '+art+(s.lot?' | Lot: '+s.lot:''));
+  alert('✓ Cost sheet saved: '+(s.lot?s.lot+' — ':'')+art);
+}
+
+function newCS(){if(!confirm('Start a new blank sheet?'))return;['cs-art','cs-lot','cs-sea','cs-buyer'].forEach(id=>setVal(id,''));setVal('cs-margin','15');setVal('cs-qty','500');$id('lot-info-strip').style.display='none';initCS();}
+
+function csTab(t,el){
+  document.querySelectorAll('#page-cost .tab').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  $id('cs-create').style.display=t==='create'?'block':'none';
+  $id('cs-view').style.display=t==='view'?'block':'none';
+  if(t==='view')renderSheets();
+}
+
+function updateSheetLotFilter(){
+  const sel=$id('csv-lot'); if(!sel)return;
+  const lotNos=[...new Set(sheets.map(s=>s.lot).filter(Boolean))];
+  sel.innerHTML='<option value="">All Lots</option>'+lotNos.map(l=>`<option>${esc(l)}</option>`).join('');
+}
+
+function renderSheets(){
+  const q=val('csv-q').toLowerCase(),fl=val('csv-lot'),fc=val('csv-cat');
+  const f=sheets.filter(s=>(!q||[s.art,s.lot,s.buyer,s.sea].some(v=>(v+'').toLowerCase().includes(q)))&&(!fl||s.lot===fl)&&(!fc||s.cat===fc));
+  $id('sheets-empty').style.display=f.length?'none':'block';
+  const cc=c=>c&&c.includes('Wind')?'b-wc':c&&c.includes('Sweat')?'b-sw':'b-ot';
+  $id('sheets-out').innerHTML=f.map((s,i)=>`
+    <div class="lot-card">
+      <div class="lot-hdr">
+        <div><span class="lot-id" style="font-size:14px">${esc(s.art)}</span>
+          ${s.lot?`<span class="badge b-wc" style="margin-left:8px">LOT: ${esc(s.lot)}</span>`:''}
+          <span class="badge ${cc(s.cat)}" style="margin-left:6px">${esc(s.cat)}</span></div>
+        <span style="color:var(--muted);font-size:12px">${s.date||'—'}</span>
+      </div>
+      <div class="lot-meta">
+        ${s.sea?`<span>Season: <strong>${esc(s.sea)}</strong></span>`:''}
+        ${s.buyer?`<span>Buyer: <strong>${esc(s.buyer)}</strong></span>`:''}
+        <span>Qty: <strong>${s.qty} pcs</strong></span>
+        <span>Margin: <strong>${s.margin}%</strong></span>
+      </div>
+      <div class="stat-row">
+        <div class="stat-chip"><span>Cost/Pc</span><strong style="color:var(--gold)">${s.total}</strong></div>
+        <div class="stat-chip"><span>Selling/Pc</span><strong style="color:var(--gold2)">${s.sp}</strong></div>
+        <div class="stat-chip"><span>Order Value</span><strong style="color:var(--green)">${s.tov}</strong></div>
+      </div>
+      <div style="text-align:right;margin-top:10px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+        <button onclick="loadCS(${sheets.indexOf(s)})" style="padding:5px 14px;background:var(--s2);border:1px solid var(--border2);border-radius:6px;color:var(--gold2);cursor:pointer;font-size:12px;font-weight:600">Load &amp; Edit</button>
+        <button onclick="printSheet(${sheets.indexOf(s)})" style="padding:5px 14px;background:none;border:1px solid var(--border2);border-radius:6px;color:var(--muted2);cursor:pointer;font-size:12px;font-weight:600">🖨️ Print</button>
+        <button onclick="delSheet(${sheets.indexOf(s)})" style="padding:5px 14px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--red);cursor:pointer;font-size:12px">Delete</button>
+      </div>
+    </div>`).join('');
+}
+
+function loadCS(i){
+  const s=sheets[i];
+  setVal('cs-art',s.art);setVal('cs-lot',s.lot||'');$id('cs-cat').value=s.cat;
+  setVal('cs-sea',s.sea);setVal('cs-buyer',s.buyer);setVal('cs-date',s.date);
+  setVal('cs-margin',s.margin);setVal('cs-qty',s.qty);
+  matR=JSON.parse(JSON.stringify(s.matR));trimR=JSON.parse(JSON.stringify(s.trimR));labR=JSON.parse(JSON.stringify(s.labR));
+  renderAllCS(); autoFillFromLot();
+  csTab('create',document.querySelector('#page-cost .tab'));
+  logAction('COST LOADED','Loaded: '+s.art+(s.lot?' | Lot: '+s.lot:''));
+}
+
+async function delSheet(i){
+  const s=sheets[i];
+  if(!confirm('Delete this cost sheet?'))return;
+  await dbDelete('cost_sheets',s.id);
+  logAction('COST DELETED','Article: '+s.art+(s.lot?' | Lot: '+s.lot:''));
+  sheets.splice(i,1);renderSheets();updateSheetLotFilter();
+}
+
+// ══════════════════════════════
+// PRINT
+// ══════════════════════════════
+function printSection(section){
+  $id('print-date').textContent='Printed: '+new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true});
+  document.querySelectorAll('.page').forEach(p=>p.style.display='none');
+  $id('page-'+section).style.display='block';
+  if(section==='lots'){$id('lt-add').style.display='none';$id('lt-list').style.display='block';}
+  else{$id('cs-create').style.display='none';$id('cs-view').style.display='block';}
+  window.print();
+  setTimeout(()=>showPage(section),600);
+}
+
+function printLot(id){
+  const l=lots.find(x=>x.id==id); if(!l)return;
+  const fabRows=FAB_KEYS.map(k=>{const d=l.fabData[k];if(!d||!d.iss)return '';
+    return `<tr><td>${d.label||FAB_LABELS[k]}</td><td>${d.unit}</td><td>${d.iss}</td><td>${d.waste||0}</td><td>${d.avgPerPc}</td><td>${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
+  }).filter(Boolean).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>F3 Lot ${esc(l.no)}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;font-size:13px;color:#000;padding:30px}
+    h1{font-size:32px;font-weight:900;letter-spacing:6px;margin-bottom:4px}.sub{font-size:11px;letter-spacing:2px;color:#666;margin-bottom:20px}
+    .div{border-top:2px solid #000;margin:12px 0}.sdiv{border-top:1px solid #ccc;margin:8px 0}
+    .sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;margin:14px 0 8px}
+    .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px}
+    .f{padding:8px 10px;border:1px solid #ddd;border-radius:4px}
+    .f label{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px}
+    .f span{font-size:14px;font-weight:700}
+    table{width:100%;border-collapse:collapse;margin-bottom:12px}
+    th{background:#f5f5f5;padding:7px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid #ddd}
+    td{padding:7px 10px;border-bottom:1px solid #eee}
+    .sr{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0}
+    .sc{padding:8px 14px;border:1px solid #ddd;border-radius:4px;font-size:12px}
+    .sc label{color:#888;font-size:10px;display:block;margin-bottom:2px}.sc span{font-weight:700;font-size:14px}
+    .footer{margin-top:30px;font-size:11px;color:#999;text-align:right}
+  </style></head><body>
+  <h1>F3</h1><div class="sub">GARMENT MANAGEMENT SYSTEM | LOT CUTTING ENTRY</div><div class="div"></div>
+  <div class="grid">
+    <div class="f"><label>Lot No.</label><span>${esc(l.no)}</span></div>
+    <div class="f"><label>Article No.</label><span>${esc(l.art)}</span></div>
+    <div class="f"><label>Article Name</label><span>${esc(l.artname)||'—'}</span></div>
+    <div class="f"><label>Master Name</label><span>${esc(l.master)||'—'}</span></div>
+    <div class="f"><label>Cut Date</label><span>${l.date}</span></div>
+    <div class="f"><label>Category</label><span>${esc(l.cat)}</span></div>
+    <div class="f"><label>No. of Layers</label><span>${l.layers||'—'}</span></div>
+    <div class="f"><label>Total Pcs Cut</label><span>${l.pcs.toLocaleString()}</span></div>
+    <div class="f"><label>GSM / Quality</label><span>${esc(l.gsm)||'—'}</span></div>
+  </div>
+  <div class="sec">Fabric Issued</div>
+  <table><thead><tr><th>Fabric</th><th>Unit</th><th>Issued</th><th>Wastage</th><th>Avg/Pc</th><th>Wastage%</th></tr></thead>
+  <tbody>${fabRows||'<tr><td colspan="6" style="color:#999;text-align:center">No fabric data</td></tr>'}</tbody></table>
+  <div class="sr">
+    <div class="sc"><label>Overall Wastage %</label><span>${l.overallWpct}%</span></div>
+    <div class="sc"><label>Fabric Efficiency</label><span>${l.overallEff}%</span></div>
+  </div>
+  <div class="sec">Stitching &amp; Packing</div>
+  <div class="grid" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="f"><label>Tailor Stitched Pcs</label><span>${l.stitched.toLocaleString()}</span></div>
+    <div class="f"><label>Packed Pcs Received</label><span>${l.packed.toLocaleString()}</span></div>
+    <div class="f"><label>Shortage</label><span style="color:${l.shortage>0?'#c00':'#000'}">${l.shortage}</span></div>
+  </div>
+  ${l.rem?`<div class="sec">Remarks</div><div style="padding:8px 10px;border:1px solid #ddd;border-radius:4px;color:#555">${esc(l.rem)}</div>`:''}
+  <div class="footer">Printed: ${new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} | F3 Garment Management System</div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+
+function printSheet(i){
+  const s=sheets[i]; if(!s)return;
+  const mT=s.matR.reduce((x,r)=>x+parseFloat(r.c||0)*parseFloat(r.r||0),0);
+  const tT=s.trimR.reduce((x,r)=>x+parseFloat(r.c||0)*parseFloat(r.r||0),0);
+  const lT=s.labR.reduce((x,r)=>x+parseFloat(r.r||0),0);
+  const tot=mT+tT+lT, sp=tot*(1+parseFloat(s.margin||0)/100);
+  const mRows=s.matR.map(r=>`<tr><td>${esc(r.n)}</td><td>${esc(r.u)}</td><td>${r.c||0}</td><td>₹${parseFloat(r.r||0).toFixed(2)}</td><td style="text-align:right;font-weight:700">₹${(parseFloat(r.c||0)*parseFloat(r.r||0)).toFixed(2)}</td></tr>`).join('');
+  const tRows=s.trimR.map(r=>`<tr><td>${esc(r.n)}</td><td>${esc(r.u)}</td><td>${r.c||0}</td><td>₹${parseFloat(r.r||0).toFixed(2)}</td><td style="text-align:right;font-weight:700">₹${(parseFloat(r.c||0)*parseFloat(r.r||0)).toFixed(2)}</td></tr>`).join('');
+  const lRows=s.labR.map(r=>`<tr><td>${esc(r.n)}</td><td>${esc(r.u)}</td><td colspan="2">—</td><td style="text-align:right;font-weight:700">₹${parseFloat(r.r||0).toFixed(2)}</td></tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>F3 Cost Sheet ${esc(s.art)}</title><style>
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;font-size:13px;color:#000;padding:30px}
+    h1{font-size:32px;font-weight:900;letter-spacing:6px;margin-bottom:4px}.sub{font-size:11px;letter-spacing:2px;color:#666;margin-bottom:20px}
+    .div{border-top:2px solid #000;margin:12px 0}.sec{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#555;margin:14px 0 8px}
+    .grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px}
+    .f{padding:8px 10px;border:1px solid #ddd;border-radius:4px}
+    .f label{font-size:10px;color:#888;text-transform:uppercase;display:block;margin-bottom:3px}.f span{font-size:14px;font-weight:700}
+    table{width:100%;border-collapse:collapse;margin-bottom:4px}
+    th{background:#f5f5f5;padding:7px 10px;text-align:left;font-size:11px;text-transform:uppercase;border-bottom:2px solid #ddd}
+    td{padding:7px 10px;border-bottom:1px solid #eee}
+    .tr td{background:#f0f0f0;font-weight:700;padding:8px 10px}
+    .sg{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:10px;margin:14px 0}
+    .sb{padding:12px;border:1px solid #ddd;border-radius:4px;text-align:center}
+    .sb.main{border:2px solid #000}.sb label{font-size:10px;color:#888;text-transform:uppercase;display:block;margin-bottom:4px}
+    .sb span{font-size:20px;font-weight:900}
+    .footer{margin-top:30px;font-size:11px;color:#999;text-align:right;border-top:1px solid #eee;padding-top:10px}
+  </style></head><body>
+  <h1>F3</h1><div class="sub">GARMENT MANAGEMENT SYSTEM | COST SHEET</div><div class="div"></div>
+  <div class="grid">
+    <div class="f"><label>Article Name</label><span>${esc(s.art)}</span></div>
+    <div class="f"><label>Lot No.</label><span>${esc(s.lot)||'—'}</span></div>
+    <div class="f"><label>Category</label><span>${esc(s.cat)}</span></div>
+    <div class="f"><label>Season</label><span>${esc(s.sea)||'—'}</span></div>
+    <div class="f"><label>Buyer / Brand</label><span>${esc(s.buyer)||'—'}</span></div>
+    <div class="f"><label>Date</label><span>${s.date||'—'}</span></div>
+  </div>
+  <div class="sec">Fabric &amp; Raw Materials</div>
+  <table><thead><tr><th>Material</th><th>Unit</th><th>Consumption</th><th>Rate (₹)</th><th style="text-align:right">Amount (₹)</th></tr></thead>
+  <tbody>${mRows}</tbody><tfoot><tr class="tr"><td colspan="4" style="text-align:right">Total Materials</td><td style="text-align:right">₹${mT.toFixed(2)}</td></tr></tfoot></table>
+  <div class="sec">Trims &amp; Accessories</div>
+  <table><thead><tr><th>Item</th><th>Unit</th><th>Qty/Pc</th><th>Rate (₹)</th><th style="text-align:right">Amount (₹)</th></tr></thead>
+  <tbody>${tRows}</tbody><tfoot><tr class="tr"><td colspan="4" style="text-align:right">Total Trims</td><td style="text-align:right">₹${tT.toFixed(2)}</td></tr></tfoot></table>
+  <div class="sec">Labour &amp; Overheads</div>
+  <table><thead><tr><th>Process</th><th>Basis</th><th colspan="2"></th><th style="text-align:right">Amount (₹)</th></tr></thead>
+  <tbody>${lRows}</tbody><tfoot><tr class="tr"><td colspan="4" style="text-align:right">Total Labour</td><td style="text-align:right">₹${lT.toFixed(2)}</td></tr></tfoot></table>
+  <div class="div"></div>
+  <div class="sg">
+    <div class="sb"><label>Materials</label><span>₹${Math.round(mT)}</span></div>
+    <div class="sb"><label>Trims</label><span>₹${Math.round(tT)}</span></div>
+    <div class="sb"><label>Labour</label><span>₹${Math.round(lT)}</span></div>
+    <div class="sb main"><label>Total Cost / Pc</label><span>₹${tot.toFixed(2)}</span></div>
+  </div>
+  <div class="sg">
+    <div class="sb"><label>Profit Margin</label><span>${s.margin}%</span></div>
+    <div class="sb"><label>Selling Price / Pc</label><span>₹${sp.toFixed(2)}</span></div>
+    <div class="sb"><label>Order Qty</label><span>${parseInt(s.qty||0).toLocaleString()} pcs</span></div>
+    <div class="sb main"><label>Total Order Value</label><span>${s.tov}</span></div>
+  </div>
+  <div class="footer">Printed: ${new Date().toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:true})} | F3 Garment Management System | Owner Copy</div>
+  <script>window.onload=()=>window.print()<\/script></body></html>`);
+  w.document.close();
+}
+</script>
+</body>
+</html>
