@@ -357,7 +357,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;font-family:'Segoe UI
         <div class="card-hdr">Fabric &amp; Raw Materials</div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th style="min-width:180px">Material</th><th style="min-width:70px">Unit</th><th style="min-width:110px">Consumption</th><th style="min-width:120px">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
+            <thead><tr><th style="width:36px">S.No</th><th style="min-width:180px">Material</th><th style="min-width:70px">Unit</th><th style="min-width:110px">Consumption</th><th style="min-width:120px">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
             <tbody id="mat-body"></tbody>
             <tfoot><tr class="tot-row"><td colspan="4" style="text-align:right;color:var(--muted);font-size:11px">TOTAL MATERIALS</td><td class="amt" id="mat-tot">₹0.00</td><td></td></tr></tfoot>
           </table>
@@ -368,7 +368,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;font-family:'Segoe UI
         <div class="card-hdr">Trims &amp; Accessories</div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th style="min-width:180px">Item</th><th style="min-width:70px">Unit</th><th style="min-width:110px">Qty / Pc</th><th style="min-width:120px">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
+            <thead><tr><th style="width:36px">S.No</th><th style="min-width:180px">Item</th><th style="min-width:70px">Unit</th><th style="min-width:110px">Qty / Pc</th><th style="min-width:120px">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
             <tbody id="trim-body"></tbody>
             <tfoot><tr class="tot-row"><td colspan="4" style="text-align:right;color:var(--muted);font-size:11px">TOTAL TRIMS</td><td class="amt" id="trim-tot">₹0.00</td><td></td></tr></tfoot>
           </table>
@@ -379,7 +379,7 @@ body{background:var(--bg);color:var(--text);font-size:14px;font-family:'Segoe UI
         <div class="card-hdr">Labour &amp; Overheads</div>
         <div style="overflow-x:auto">
           <table class="tbl">
-            <thead><tr><th style="min-width:200px">Process</th><th style="min-width:100px">Basis</th><th style="min-width:120px" colspan="2">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
+            <thead><tr><th style="width:36px">S.No</th><th style="min-width:200px">Process</th><th style="min-width:100px">Basis</th><th style="min-width:120px" colspan="2">Rate (₹)</th><th style="text-align:right;min-width:120px">Amount (₹)</th><th style="width:36px"></th></tr></thead>
             <tbody id="lab-body"></tbody>
             <tfoot><tr class="tot-row"><td colspan="4" style="text-align:right;color:var(--muted);font-size:11px">TOTAL LABOUR</td><td class="amt" id="lab-tot">₹0.00</td><td></td></tr></tfoot>
           </table>
@@ -853,18 +853,27 @@ function renderCST(tbId,rows,type){
   const tb=$id(tbId); tb.innerHTML='';
   rows.forEach((row,i)=>{
     const tr=document.createElement('tr');
+    const sno = `<td style="text-align:center;color:var(--muted);font-size:12px;font-weight:700">${i+1}</td>`;
     if(type==='lab'){
-      tr.innerHTML=`<td><input value="${esc(row.n)}" placeholder="Process" onchange="labR[${i}].n=this.value"/></td>
+      const amt = parseFloat(row.r||0);
+      tr.innerHTML=sno+`<td><input value="${esc(row.n)}" placeholder="Process" onchange="labR[${i}].n=this.value"/></td>
         <td><input value="${esc(row.u)}" style="width:90px" onchange="labR[${i}].u=this.value"/></td>
-        <td colspan="2"><input type="number" value="${row.r||''}" placeholder="₹" style="width:130px" onchange="labR[${i}].r=this.value;recalc()"/></td>
-        <td class="amt">₹${parseFloat(row.r||0).toFixed(2)}</td>
+        <td colspan="2"><input type="number" value="${row.r||''}" placeholder="₹" style="width:130px" 
+          onchange="labR[${i}].r=this.value;recalc()" 
+          oninput="labR[${i}].r=this.value;recalc()"/></td>
+        <td class="amt" id="amt-lab-${i}">₹${amt.toFixed(2)}</td>
         <td><button class="del-btn" onclick="delRow('lab',${i})">✕</button></td>`;
     } else {
-      tr.innerHTML=`<td><input value="${esc(row.n)}" placeholder="Item" onchange="${type}R[${i}].n=this.value"/></td>
+      const amt = parseFloat(row.c||0)*parseFloat(row.r||0);
+      tr.innerHTML=sno+`<td><input value="${esc(row.n)}" placeholder="Item" onchange="${type}R[${i}].n=this.value"/></td>
         <td><input value="${esc(row.u)}" style="width:70px" onchange="${type}R[${i}].u=this.value"/></td>
-        <td><input type="number" value="${row.c||''}" placeholder="0.000" step="0.001" style="width:110px" onchange="${type}R[${i}].c=this.value;recalc()"/></td>
-        <td><input type="number" value="${row.r||''}" placeholder="0.00" style="width:110px" onchange="${type}R[${i}].r=this.value;recalc()"/></td>
-        <td class="amt">₹${(parseFloat(row.c||0)*parseFloat(row.r||0)).toFixed(2)}</td>
+        <td><input type="number" value="${row.c||''}" placeholder="0.000" step="0.001" style="width:110px" 
+          onchange="${type}R[${i}].c=this.value;recalc()"
+          oninput="${type}R[${i}].c=this.value;recalc()"/></td>
+        <td><input type="number" value="${row.r||''}" placeholder="0.00" style="width:110px" 
+          onchange="${type}R[${i}].r=this.value;recalc()"
+          oninput="${type}R[${i}].r=this.value;recalc()"/></td>
+        <td class="amt" id="amt-${type}-${i}">₹${amt.toFixed(2)}</td>
         <td><button class="del-btn" onclick="delRow('${type}',${i})">✕</button></td>`;
     }
     tb.appendChild(tr);
@@ -875,12 +884,30 @@ function delRow(type,i){ const m={mat:matR,trim:trimR,lab:labR},t={mat:'mat-body
 function addRow(type){ const m={mat:matR,trim:trimR,lab:labR},d={mat:{n:'',u:'Meter',c:'',r:''},trim:{n:'',u:'Pcs',c:'',r:''},lab:{n:'',u:'Per Pc',r:''}},t={mat:'mat-body',trim:'trim-body',lab:'lab-body'}; m[type].push({...d[type]}); renderCST(t[type],m[type],type); }
 
 function recalc(){
+  // Update each row amount cell live
+  matR.forEach((r,i)=>{
+    const el=$id('amt-mat-'+i);
+    if(el) el.textContent='₹'+(parseFloat(r.c||0)*parseFloat(r.r||0)).toFixed(2);
+  });
+  trimR.forEach((r,i)=>{
+    const el=$id('amt-trim-'+i);
+    if(el) el.textContent='₹'+(parseFloat(r.c||0)*parseFloat(r.r||0)).toFixed(2);
+  });
+  labR.forEach((r,i)=>{
+    const el=$id('amt-lab-'+i);
+    if(el) el.textContent='₹'+parseFloat(r.r||0).toFixed(2);
+  });
+
   const mT=matR.reduce((s,r)=>s+parseFloat(r.c||0)*parseFloat(r.r||0),0);
   const tT=trimR.reduce((s,r)=>s+parseFloat(r.c||0)*parseFloat(r.r||0),0);
   const lT=labR.reduce((s,r)=>s+parseFloat(r.r||0),0);
   const tot=mT+tT+lT, mg=parseFloat(val('cs-margin')||0), qty=parseFloat(val('cs-qty')||0), sp=tot*(1+mg/100);
-  $id('mat-tot').textContent='₹'+mT.toFixed(2); $id('trim-tot').textContent='₹'+tT.toFixed(2); $id('lab-tot').textContent='₹'+lT.toFixed(2);
-  $id('s-mat').textContent='₹'+Math.round(mT); $id('s-trim').textContent='₹'+Math.round(tT); $id('s-lab').textContent='₹'+Math.round(lT);
+  $id('mat-tot').textContent='₹'+mT.toFixed(2);
+  $id('trim-tot').textContent='₹'+tT.toFixed(2);
+  $id('lab-tot').textContent='₹'+lT.toFixed(2);
+  $id('s-mat').textContent='₹'+Math.round(mT);
+  $id('s-trim').textContent='₹'+Math.round(tT);
+  $id('s-lab').textContent='₹'+Math.round(lT);
   $id('s-total').textContent='₹'+tot.toFixed(2);
   setVal('cs-sp','₹'+sp.toFixed(2));
   setVal('cs-tov','₹'+(sp*qty).toLocaleString('en-IN',{maximumFractionDigits:2}));
