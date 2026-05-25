@@ -286,8 +286,10 @@ body{background:var(--bg);color:var(--text);font-size:14px;font-family:'Segoe UI
               <td class="amt"><span id="avg-felt">—</span></td>
               <td style="text-align:center"><span id="wpct-felt" style="color:var(--red);font-weight:700">—</span></td></tr>
           </tbody>
+          <tbody id="extra-fab-body"></tbody>
         </table>
         </div>
+        <button class="add-row" onclick="addExtraFabric()" style="margin-top:8px">+ Add Extra Fabric Row</button>
         <div class="avg-strip">
           <div class="avg-item"><span>Total Pcs Cut:</span><strong id="a-pcs-disp">0</strong></div>
           <div class="avg-item"><span>Overall Wastage %:</span><strong id="a-wpct" style="color:var(--red)">—</strong></div>
@@ -676,12 +678,21 @@ function calcLotAvg(){
   const pcs=parseInt(val('lo-pcs')||0);
   $id('a-pcs-disp').textContent=pcs.toLocaleString();
   let tIss=0,tWaste=0;
+  // Fixed 5 fabrics
   FAB_KEYS.forEach(k=>{
     const iss=parseFloat(val('fu-'+k+'-iss')||0);
     const waste=parseFloat(val('fu-'+k+'-waste')||0);
     tIss+=iss; tWaste+=waste;
     $id('avg-'+k).textContent=(iss>0&&pcs>0)?(iss/pcs).toFixed(3):'—';
     $id('wpct-'+k).textContent=iss>0?(waste/iss*100).toFixed(1)+'%':'—';
+  });
+  // Extra fabric rows
+  extraFabs.forEach((f,i)=>{
+    tIss+=f.iss; tWaste+=f.waste;
+    const avgEl=$id('avg-extra-'+i);
+    const wpctEl=$id('wpct-extra-'+i);
+    if(avgEl) avgEl.textContent=(f.iss>0&&pcs>0)?(f.iss/pcs).toFixed(3):'—';
+    if(wpctEl) wpctEl.textContent=f.iss>0?(f.waste/f.iss*100).toFixed(1)+'%':'—';
   });
   $id('a-wpct').textContent=tIss>0?(tWaste/tIss*100).toFixed(2)+'%':'—';
   $id('a-eff').textContent=tIss>0?((tIss-tWaste)/tIss*100).toFixed(2)+'%':'—';
@@ -693,12 +704,12 @@ function calcLotAvg(){
 
 function getFabData(){
   const data={};
+  const pcs=parseInt(val('lo-pcs')||0);
   FAB_KEYS.forEach(k=>{
     const unitEl=$id('fu-'+k+'-unit');
     const nameEl=$id('fn-'+k);
     const iss=parseFloat(val('fu-'+k+'-iss')||0);
     const waste=parseFloat(val('fu-'+k+'-waste')||0);
-    const pcs=parseInt(val('lo-pcs')||0);
     data[k]={
       label:nameEl?nameEl.value.trim()||FAB_LABELS[k]:FAB_LABELS[k],
       unit:unitEl?unitEl.value:'Kg',iss,waste,
@@ -706,6 +717,13 @@ function getFabData(){
       wpct:iss>0?(waste/iss*100).toFixed(1):'—'
     };
   });
+  // Include extra fabrics
+  data.extra = extraFabs.map(f=>({
+    label:f.name||'Extra Fabric',
+    unit:f.unit, iss:f.iss, waste:f.waste,
+    avgPerPc:(f.iss>0&&pcs>0)?(f.iss/pcs).toFixed(3):'—',
+    wpct:f.iss>0?(f.waste/f.iss*100).toFixed(1):'—'
+  }));
   return data;
 }
 
@@ -737,6 +755,47 @@ async function saveLot(){
   alert('✓ Lot saved: '+no);
 }
 
+
+// ══════════════════════════════════════
+// EXTRA FABRIC ROWS
+// ══════════════════════════════════════
+let extraFabs = []; // [{id, name, unit, iss, waste}]
+
+function addExtraFabric(){
+  const id = Date.now();
+  extraFabs.push({id, name:'', unit:'Meter', iss:0, waste:0});
+  renderExtraFabrics();
+}
+
+function renderExtraFabrics(){
+  const tb = $id('extra-fab-body');
+  if(!tb) return;
+  tb.innerHTML = extraFabs.map((f,i) => `
+    <tr>
+      <td><input value="${esc(f.name)}" placeholder="Fabric name e.g. Tafta" 
+        style="width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--gold2);font-size:13px;font-weight:600;outline:none"
+        oninput="extraFabs[${i}].name=this.value"
+        onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor='var(--border)'"/></td>
+      <td><select onchange="extraFabs[${i}].unit=this.value;calcLotAvg()" 
+        style="width:100%;padding:5px 6px;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:13px;outline:none">
+        <option ${f.unit==='Meter'?'selected':''}>Meter</option>
+        <option ${f.unit==='Kg'?'selected':''}>Kg</option>
+      </select></td>
+      <td><input type="number" value="${f.iss||''}" placeholder="0" step="0.001" min="0"
+        oninput="extraFabs[${i}].iss=parseFloat(this.value)||0;calcLotAvg()"/></td>
+      <td><input type="number" value="${f.waste||''}" placeholder="0" step="0.001" min="0"
+        oninput="extraFabs[${i}].waste=parseFloat(this.value)||0;calcLotAvg()"/></td>
+      <td class="amt"><span id="avg-extra-${i}">—</span></td>
+      <td style="text-align:center"><span id="wpct-extra-${i}" style="color:var(--red);font-weight:700">—</span></td>
+    </tr>`).join('');
+  calcLotAvg();
+}
+
+function delExtraFabric(i){
+  extraFabs.splice(i,1);
+  renderExtraFabrics();
+}
+
 const FAB_DEFAULTS={main:'Main Fabric',inner:'Inner Fabric',rib:'Rib',pock:'Pocketing & Sleeves',felt:'Felt'};
 function clearLot(){
   ['lo-no','lo-art','lo-artname','lo-master','lo-layers','lo-gsm',
@@ -745,6 +804,8 @@ function clearLot(){
     setVal('fu-'+k+'-iss','');setVal('fu-'+k+'-waste','');
     setVal('fn-'+k, FAB_DEFAULTS[k]);
     $id('avg-'+k).textContent='—';$id('wpct-'+k).textContent='—';});
+  extraFabs=[];
+  const etb=$id('extra-fab-body'); if(etb) etb.innerHTML='';
   $id('a-pcs-disp').textContent='0';
   $id('a-wpct').textContent='—';$id('a-eff').textContent='—';
   $id('stitch-eff').textContent='—';$id('pack-eff').textContent='—';
@@ -757,14 +818,24 @@ function renderLots(){
   $id('lots-empty').style.display=f.length?'none':'block';
   const cc=c=>c.includes('Wind')?'b-wc':c.includes('Sweat')?'b-sw':'b-ot';
   $id('lots-out').innerHTML=f.map(l=>{
-    const fabRows=FAB_KEYS.map(k=>{
-      const d=l.fabData[k]; if(!d||!d.iss)return '';
-      return `<tr><td style="color:var(--muted2);font-size:12px">${d.label||FAB_LABELS[k]}</td>
-        <td style="font-size:12px">${d.unit}</td><td style="font-size:12px">${d.iss}</td>
-        <td style="font-size:12px">${d.waste||0}</td>
-        <td style="font-size:12px;color:var(--gold2);font-weight:700">${d.avgPerPc}</td>
-        <td style="font-size:12px;color:var(--red);font-weight:700">${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
-    }).filter(Boolean).join('');
+    const fabRows=[
+      ...FAB_KEYS.map(k=>{
+        const d=l.fabData[k]; if(!d||!d.iss)return '';
+        return `<tr><td style="color:var(--muted2);font-size:12px">${d.label||FAB_LABELS[k]}</td>
+          <td style="font-size:12px">${d.unit}</td><td style="font-size:12px">${d.iss}</td>
+          <td style="font-size:12px">${d.waste||0}</td>
+          <td style="font-size:12px;color:var(--gold2);font-weight:700">${d.avgPerPc}</td>
+          <td style="font-size:12px;color:var(--red);font-weight:700">${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
+      }),
+      ...(l.fabData.extra||[]).map(d=>{
+        if(!d||!d.iss)return '';
+        return `<tr><td style="color:var(--muted2);font-size:12px">${esc(d.label)}</td>
+          <td style="font-size:12px">${d.unit}</td><td style="font-size:12px">${d.iss}</td>
+          <td style="font-size:12px">${d.waste||0}</td>
+          <td style="font-size:12px;color:var(--gold2);font-weight:700">${d.avgPerPc}</td>
+          <td style="font-size:12px;color:var(--red);font-weight:700">${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
+      })
+    ].filter(Boolean).join('');
     return `<div class="lot-card">
       <div class="lot-hdr">
         <span class="lot-id">📋 ${esc(l.no)}</span>
@@ -931,10 +1002,17 @@ function autoFillFromLot(){
     const fd=lot.fabData[k]; if(!fd)return;
     const avg=fd.avgPerPc!=='—'?parseFloat(fd.avgPerPc):0;
     if(matR[i]){
-      matR[i].n=fd.label||FAB_LABELS[k]; // use custom fabric name from lot
+      matR[i].n=fd.label||FAB_LABELS[k];
       matR[i].u=fd.unit||(k==='rib'||k==='felt'?'Kg':'Meter');
       if(avg>0)matR[i].c=avg;
     }
+  });
+  // Add extra fabrics as additional rows in cost sheet
+  const extraFabData = lot.fabData.extra||[];
+  extraFabData.forEach(fd=>{
+    if(!fd||!fd.iss)return;
+    const avg=fd.avgPerPc!=='—'?parseFloat(fd.avgPerPc):0;
+    matR.push({n:fd.label||'Extra Fabric', u:fd.unit||'Meter', c:avg>0?avg:'', r:''});
   });
   renderCST('mat-body',matR,'mat'); recalc();
 }
@@ -1038,9 +1116,14 @@ function printSection(section){
 
 function printLot(id){
   const l=lots.find(x=>x.id==id); if(!l)return;
-  const fabRows=FAB_KEYS.map(k=>{const d=l.fabData[k];if(!d||!d.iss)return '';
-    return `<tr><td>${d.label||FAB_LABELS[k]}</td><td>${d.unit}</td><td>${d.iss}</td><td>${d.waste||0}</td><td>${d.avgPerPc}</td><td>${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
-  }).filter(Boolean).join('');
+  const fabRows=[
+    ...FAB_KEYS.map(k=>{const d=l.fabData[k];if(!d||!d.iss)return '';
+      return `<tr><td>${d.label||FAB_LABELS[k]}</td><td>${d.unit}</td><td>${d.iss}</td><td>${d.waste||0}</td><td>${d.avgPerPc}</td><td>${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
+    }),
+    ...(l.fabData.extra||[]).map(d=>{if(!d||!d.iss)return '';
+      return `<tr><td>${esc(d.label)}</td><td>${d.unit}</td><td>${d.iss}</td><td>${d.waste||0}</td><td>${d.avgPerPc}</td><td>${d.wpct!=='—'?d.wpct+'%':'—'}</td></tr>`;
+    })
+  ].filter(Boolean).join('');
   const w=window.open('','_blank');
   w.document.write(`<!DOCTYPE html><html><head><title>F3 Lot ${esc(l.no)}</title><style>
     *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Segoe UI',sans-serif;font-size:13px;color:#000;padding:30px}
